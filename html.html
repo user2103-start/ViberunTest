@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Course Viewer</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: #0f172a;
+      color: white;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      background: #1e293b;
+      border-radius: 14px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: 0.2s;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+    }
+
+    .thumb {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      background: #111827;
+    }
+
+    .content {
+      padding: 14px;
+    }
+
+    .title {
+      font-size: 15px;
+      line-height: 1.5;
+      margin-bottom: 8px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: #334155;
+      font-size: 12px;
+    }
+
+    .back {
+      margin-bottom: 20px;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      background: #2563eb;
+      color: white;
+      font-size: 15px;
+    }
+
+    .videoModal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+
+    .videoBox {
+      width: 90%;
+      max-width: 1000px;
+      background: #111827;
+      padding: 18px;
+      border-radius: 16px;
+    }
+
+    video {
+      width: 100%;
+      border-radius: 12px;
+      margin-bottom: 15px;
+    }
+
+    .qualities {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .qualities button {
+      padding: 10px 14px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #2563eb;
+      color: white;
+    }
+
+    .closeBtn {
+      margin-top: 15px;
+      background: crimson;
+    }
+
+    .path {
+      margin-bottom: 15px;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Dynamic Course Viewer</h1>
+
+  <div class="path" id="path"></div>
+
+  <button class="back" onclick="goBack()">⬅ Back</button>
+
+  <div class="grid" id="app"></div>
+
+
+  <div class="videoModal" id="videoModal">
+    <div class="videoBox">
+      <video id="player" controls></video>
+
+      <div class="qualities" id="qualities"></div>
+
+      <button class="qualities closeBtn" onclick="closePlayer()">
+        Close
+      </button>
+    </div>
+  </div>
+
+
+<script>
+
+const BASE_URL = "https://mj.mixvibe.site/api/content";
+const COURSE_ID = 151;
+
+let historyStack = [];
+let currentPath = [];
+
+async function fetchData(entityId = "") {
+
+  let url = `${BASE_URL}/${COURSE_ID}`;
+
+  if(entityId) {
+    url += `/${entityId}`;
+  }
+
+  try {
+
+    const res = await fetch(url);
+    const json = await res.json();
+
+    render(json.data || []);
+
+  } catch(err) {
+    console.error(err);
+    alert("Failed to load API");
+  }
+}
+
+
+function render(items) {
+
+  const app = document.getElementById("app");
+  app.innerHTML = "";
+
+  updatePath();
+
+  items.forEach(item => {
+
+    const card = document.createElement("div");
+    card.className = "card";
+
+    const thumb = item?.data?.thumbnail?.trim()
+      ? item.data.thumbnail
+      : "https://placehold.co/600x400?text=Course";
+
+    card.innerHTML = `
+      <img class="thumb" src="${thumb}" />
+
+      <div class="content">
+        <div class="title">${item.title}</div>
+
+        <div class="badge">
+          ${item.type}
+        </div>
+      </div>
+    `;
+
+
+    card.onclick = () => {
+
+      if(item.type === "folder") {
+
+        historyStack.push(item.parent_id || "root");
+        currentPath.push(item.title);
+
+        fetchData(item.entity_id);
+
+      }
+
+      else if(item.type === "file") {
+
+        if(item?.data?.file_type === 2) {
+          openVideo(item);
+        }
+
+      }
+    }
+
+
+    app.appendChild(card);
+  })
+}
+
+
+function openVideo(item) {
+
+  const modal = document.getElementById("videoModal");
+  const player = document.getElementById("player");
+  const qualities = document.getElementById("qualities");
+
+  qualities.innerHTML = "";
+
+  let downloads = [];
+
+  try {
+    downloads = JSON.parse(item.data.download_urls || "[]");
+  } catch(e) {
+    console.log(e);
+  }
+
+
+  if(downloads.length > 0) {
+
+    player.src = downloads[downloads.length - 1].url;
+
+    downloads.forEach(q => {
+
+      const btn = document.createElement("button");
+
+      btn.innerText = q.title + "p";
+
+      btn.onclick = () => {
+        player.src = q.url;
+        player.play();
+      }
+
+      qualities.appendChild(btn);
+    })
+
+  } else {
+
+    alert("No video url found");
+  }
+
+
+  modal.style.display = "flex";
+}
+
+
+function closePlayer() {
+
+  const modal = document.getElementById("videoModal");
+  const player = document.getElementById("player");
+
+  player.pause();
+  player.src = "";
+
+  modal.style.display = "none";
+}
+
+
+function goBack() {
+
+  if(historyStack.length === 0) {
+    fetchData();
+    return;
+  }
+
+  historyStack.pop();
+  currentPath.pop();
+
+  const last = historyStack[historyStack.length - 1];
+
+  if(!last || last === "root") {
+    fetchData();
+  } else {
+    fetchData(last);
+  }
+}
+
+
+function updatePath() {
+
+  const el = document.getElementById("path");
+
+  if(currentPath.length === 0) {
+    el.innerText = "Home";
+  }
+
+  else {
+    el.innerText = "Home / " + currentPath.join(" / ");
+  }
+}
+
+
+fetchData();
+
+async function playVideo(url) {
+    try {
+        // remove old container
+        const oldFrame = document.getElementById('videoFrameContainer');
+        if (oldFrame) oldFrame.remove();
+
+        // create container
+        const container = document.createElement('div');
+        container.id = 'videoFrameContainer';
+        container.style.width = '100%';
+        container.style.marginTop = '20px';
+
+        // create iframe
+        const iframe = document.createElement('iframe');
+        iframe.src = url;
+        iframe.width = '100%';
+        iframe.height = '500';
+        iframe.allowFullscreen = true;
+        iframe.style.border = 'none';
+
+        // download button
+        const downloadBtn = document.createElement('a');
+        downloadBtn.href = url;
+        downloadBtn.target = '_blank';
+        downloadBtn.innerHTML = '<button class="quality-btn">Download Video</button>';
+
+        container.appendChild(downloadBtn);
+        container.appendChild(iframe);
+
+        document.body.prepend(container);
+
+    } catch (err) {
+        console.log('VIDEO ERROR:', err);
+        alert('Video failed to load');
+    }
+}
+
+// ===== FIX STRINGIFIED URLS =====
+function parseDownloads(raw) {
+    try {
+        const downloads = JSON.parse(raw || '[]');
+
+        return downloads.map(item => ({
+            ...item,
+            url: item.url.replace(/\\//g, '/')
+        }));
+    } catch (e) {
+        console.log('Download Parse Error', e);
+        return [];
+    }
+}
+
+// ===== PATCH FILE RENDER =====
+// Replace your old download_urls logic with:
+// const downloads = parseDownloads(item.data.download_urls);
+// downloads[0].url
+
+</script>
+
+</body>
+</html>
