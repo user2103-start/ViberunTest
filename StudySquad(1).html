@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mission Jeet</title>
+    <style>
+        html, body {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+        body {
+            background-color: #ffffff;
+            color: #333;
+        }
+        
+        /* Splash Screen Styles */
+        .splash-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            width: 100%;
+            text-align: center;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transition: opacity 0.5s ease-out;
+            z-index: 10;
+            background-color: #ffffff;
+        }
+        
+        .splash-container.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .logo {
+            width: 100px;
+            height: 100px;
+            border-radius: 1.25rem;
+            margin-bottom: 2rem;
+            object-fit: cover;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2rem;
+            font-weight: 900;
+            margin: 0;
+            letter-spacing: 0.1em;
+            color: #222;
+        }
+        
+        .progress-bar-container {
+            width: 150px;
+            height: 4px;
+            background-color: #e0e0e0;
+            border-radius: 2px;
+            margin-top: 2rem;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            width: 0;
+            height: 100%;
+            background-color: #8A89C8;
+            border-radius: 2px;
+            animation: load 2s linear forwards;
+        }
+        
+        footer {
+            position: absolute;
+            bottom: 20px;
+            font-size: 0.75rem;
+            color: #666;
+        }
+        
+        /* Animation */
+        @keyframes load {
+            0% { width: 0; }
+            100% { width: 100%; }
+        }
+        
+        /* Loading message */
+        .loading-message {
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: #666;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <!-- Splash Screen -->
+    <div id="splash" class="splash-container">
+        <img src="https://thumbs2.imgbox.com/42/18/Pr4OzJHa_t.png" 
+             alt="Vibrant Academy Logo" 
+             class="logo">
+        <h1>Vibrant Academy</h1>
+        <div class="progress-bar-container">
+            <div class="progress-bar"></div>
+        </div>
+        <div class="loading-message" id="loadingMessage">
+            Loading Mission Jeet...
+        </div>
+        <footer>
+            𝙎𝙩𝙪𝙙𝙮 𝙎𝙦𝙪𝙖𝙙
+        </footer>
+    </div>
+    
+    <script>
+        // Show splash screen for 2 seconds, then redirect
+        document.addEventListener('DOMContentLoaded', function() {
+            const splash = document.getElementById('splash');
+            const loadingMessage = document.getElementById('loadingMessage');
+            
+            // Update message after 1.5 seconds
+            setTimeout(function() {
+                loadingMessage.textContent = 'Redirecting to Vibrant Academy...';
+            }, 1500);
+            
+            // Hide splash and redirect after 2 seconds
+            setTimeout(function() {
+                splash.classList.add('hidden');
+                // Redirect to the main website
+                window.location.href = 'https://zxh.page.gd/view.php?site=vibrant-academy';}, 
+                2000);
+            
+            // Optional: Redirect immediately if user clicks
+            splash.addEventListener('click', function() {
+                window.location.href = 'https://zxh.page.gd/view.php?site=vibrant-academy';
+            });
+        });
+    </script>
+</body>
+</html>
